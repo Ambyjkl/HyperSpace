@@ -1,0 +1,49 @@
+\documentclass[12pt]{style}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\renewcommand{\ULthickness}{2pt}
+\renewcommand{\sfdefault}{pag}
+\usepackage{enumitem}
+\newlength\mylen
+\settowidth\mylen{\textbullet}
+\addtolength\mylen{-3mm}
+\setlist[itemize,1]{leftmargin=*,labelsep=-\mylen}
+\graphicspath{ {images/} }
+\begin{document}
+    \name{hyperspace}
+    \sectionsepnew\\
+    \contactline{Yash Mathur}{Quest ID: y2mathur}{Student \#20670653}{Ambareesh Balaji}{Quest ID: a3balaji}{Student \#20670653}\\
+    \text{We are going to build a clone of the popular game called "Space Shooter" using the Orbit Booster pack for the Software Engineering final project.}
+    \section{About the game}
+    \text{HyperSpace is a single player game. The objective of the game is to protect the player ship from the enemies by avoiding get shot down while shooting the enemies down.}\\
+    \text{In our version of the game, the player moves his ship by physically moving the board to the left or the right. The ship moves forward on its own, and it cannot go backwards. The player shoots other ships by pressing the button on the board.}
+    \section{Software Components}
+    \text{This project will involve heavy usage of the available software components. The following components will be utilized:}
+    \sectionsepnew
+    \noindent\begin{itemize}[before=\sffamily,topsep=0pt]
+        \setlength\itemsep{-2pt}
+        \item \textbf{Accelerometer} We will collect accelerometer data to judge which direction the player moved in.
+        \item \textbf{LCD Screen} We will display the menu, the ships and all other objects on the screen
+    \end{itemize}
+    \section{Hardware Components}
+    \text{We will make use of various hardware components for this game. They are as follows:}
+    \sectionsepnew
+    \noindent\begin{itemize}[before=\sffamily,topsep=0pt]
+        \setlength\itemsep{-2pt}
+        \item \textbf{Accelerometer} We will collect accelerometer data to judge which direction the player moved in.
+        \item \textbf{LCD Screen} We will display the menu, the ships and all other objects on the screen.
+        \item \textbf{Button} The player will use the button to fire the guns on his ship.
+        \item \textbf{Potentiometer Knob} This will be used in the menu for selecting the difficulty/level.
+    \end{itemize}
+    \section{Challenges}
+    \text{We expect to face the following challenges:}
+    \sectionsepnew
+    \noindent\begin{itemize}[before=\sffamily,topsep=0pt]
+        \setlength\itemsep{-2pt}
+        \item \textbf{Display} Displaying multiple ships on the screen may be a challenge that we will face during development.
+        \item \textbf{Smooth movement of objects} The ships and the fired shots have to move smoothly.
+        \item \textbf{Accelerometer} We have to make sure the player ship moves only when the player intends to move it.
+    \end{itemize}
+\end{document}
