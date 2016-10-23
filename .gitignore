@@ -1,2 +1,8 @@
 .directory
 .DS_Store
+proposal.aux
+proposal.fbd_latexmk
+proposal.fls
+proposal.log
+proposal.out
+proposal.synctex.gz
