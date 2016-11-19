@@ -2,6 +2,7 @@
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 #include <math.h>
+#include <map>
 #include <vector>
 #include <utility>
 #include <stdlib.h>
@@ -11,10 +12,23 @@
 // If you want specific Apple functionality, look up AGL
 using namespace std;
 
-vector<pair<GLfloat, GLfloat> > bullets, aliens;
+/*
+    ALIEN FORMATIONS
+    1 -> simple horizontal
+    2 -> 2 gorups, each coming from either side of the screen
+    3 -> dense horizontal from top
+    4 -> 2 dense horizontal groups from either side of the screen
+*/
+
+vector<pair<GLfloat, GLfloat> > bullets, aliens1, alens2, aliens3, aliens4;
+map<GLfloat, GLfloat> m;
 GLfloat r = 0.15;
 GLfloat pxl = -0.15, pxr = 0.15;
 bool play = true;
+
+void checkRedundant(){
+
+}
 
 pair<GLfloat, GLfloat> inc(pair<GLfloat, GLfloat> p){
     return make_pair(p.first, p.second+=0.1);
@@ -23,22 +37,29 @@ pair<GLfloat, GLfloat> incAlien(pair<GLfloat, GLfloat> p){
     return make_pair(p.first, p.second-=0.1);
 }
 
-void DrawStarFilled (float cx, float cy, float radius, int numPoints){
-    /*const float DegToRad = 3.14159 / 180;
+void displayBullets(){
+    for(int i=0;i<bullets.size();++i)
+        cout<<bullets[i].first<<", "<<bullets[i].second<<endl;
+}
 
-    glBegin(GL_TRIANGLE_FAN);
-    int count = 1;
-    glVertex3f(cx, cx, -10);
-    for(int i = 0; i <= numPoints*2; i++) {
-        float DegInRad = i * 360.0/(numPoints*2) * DegToRad;
-        if(count%2!=0)
-            glVertex3f((float)cx + cos(DegInRad) * radius, cy + sin(DegInRad) * radius, -10);
-        else
-            glVertex3f((cx + cos(DegInRad) * radius/2), (cy + sin(DegInRad) * radius/2), -10);
-        count++;
+bool detectCollision(int formation){
+    //cout<<"Hello";
+    m.clear();
+    for(int i=0;i<aliens1.size();++i){
+        //cout<<i<<" "<<aliens1[i].first<<" "<<aliens1[i].second<<endl<<endl;
+        m[aliens1[i].second] = aliens1[i].first;
     }
+    for(int i=0;i<bullets.size();++i)
+        if(m.find(bullets[i].second)!=m.end()){
+            cout<<m[bullets[i].second+r]<<": "<<bullets[i].first+r<<endl<<m[bullets[i].second+r]<<": "<<bullets[i].first-r<<endl<<endl;
+            if(m[bullets[i].second+r]<=bullets[i].first+r && m[bullets[i].second+r]>=bullets[i].first-r)
+                return true;
+        }
+    return false;
+}
 
-    glEnd();*/
+void DrawStarFilled (float cx, float cy, float radius, int numPoints){
+
     const float DegToRad = 3.14159 / 180;
 
     glBegin (GL_TRIANGLE_FAN);
@@ -83,9 +104,10 @@ void specialKeys( int key, int x, int y ){
             pxr -= step;
         }
         else if(key == 32){
-            cout<<(GLfloat)((pxl+pxr)/2)<<endl;
             bullets.push_back(make_pair((GLfloat)((pxl+pxr)/2), -2.4));
         }
+        else if(key==GLUT_KEY_UP)
+            displayBullets();
         glutPostRedisplay();
     }
         //DrawCircle((GLfloat)((pxl+pxr)/2), -2.4, 0.1, 0.2);
@@ -105,16 +127,23 @@ void display(){
 
     DrawStarFilled(0, 2, 0.1, 5);
 
+    if(play)
+        if(detectCollision(1))
+            play = false;
+
+    //Player
     glBegin(GL_TRIANGLES);
         glVertex3f(pxl, -2.6, -10.0);
         glVertex3f(float((pxl+pxr)/2), -2.4, -10.0);
         glVertex3f(pxr, -2.6, -10.0);
     glEnd();
+
+    //Moving the bullets every frame
     if(bullets.size()>=0 && play)
         transform(begin(bullets), end(bullets), begin(bullets), inc);
+
     for(int i=0;i<bullets.size();++i){
         //DrawCircle(bullets[i].first, bullets[i].second, 0.1, 0.2);
-        //cout<<i<<" "<<bullets[i].first<<", "<<bullets[i].second<<endl;
         glBegin(GL_TRIANGLES);
             glVertex3f(bullets[i].first-r, bullets[i].second-r, -10.0);
             glVertex3f(bullets[i].first, bullets[i].second, -10.0);
@@ -151,6 +180,7 @@ int main(int argc, char **argv){
     // Creates a window using internal glut functionality
     glutCreateWindow("HyperSpace");
 
+    aliens1.push_back(make_pair(0, 2));
     // passes reshape and display functions to the OpenGL machine for callback
     glutReshapeFunc(reshape);
     glutDisplayFunc(display);
