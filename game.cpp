@@ -21,12 +21,22 @@ using namespace std;
 vector<pair<GLfloat, GLfloat> > bullets, aliens1, aliens2, aliens3, aliens4;
 pair<GLfloat, GLfloat> alienUpdate;
 map<GLfloat, pair<GLfloat, int> > m;
-GLfloat r = 0.15, pxl = -0.15, pxr = 0.15;
+GLfloat r = 0.15, pxl = -0.15, pxr = 0.15, pos = 0;
 bool play = true, firstHit = false;
 int level = 0, cf = 1;
 
 void checkRedundant(){
 
+}
+
+void outputText(int x, int y, float r, float g, float b, char *string){
+  glColor3f( r, g, b );
+  glRasterPos2f(x, y);
+  int len, i;
+  len = (int)strlen(string);
+  for (i = 0; i < len; i++) {
+    glutBitmapCharacter(GLUT_BITMAP_8_BY_13, string[i]);
+  }
 }
 
 pair<GLfloat, GLfloat> inc(pair<GLfloat, GLfloat> p){
@@ -38,7 +48,8 @@ pair<GLfloat, GLfloat> incAlien(pair<GLfloat, GLfloat> p){
 
 void displayBullets(){
     for(int i=0;i<bullets.size();++i)
-        cout<<bullets[i].first<<", "<<bullets[i].second<<endl;
+        cout<<bullets[i].first<<", "<<bullets[i].second<<", pos = "<<pos<<endl;
+
 }
 
 void showAliens(int);
@@ -124,6 +135,13 @@ bool detectCollision(int formation){
     return false;
 }
 
+bool dead(){
+    for(int i=0;i<aliens1.size();++i)
+        if(aliens1[i].first >= pos - 2*r && aliens1[i].first <= pos + 2*r && aliens1[i].second <= -2.375)
+            return true;
+    return false;
+}
+
 void genAliens(int formation){
     aliens1.clear();
     aliens2.clear();
@@ -171,18 +189,20 @@ void DrawCircle(GLfloat cx, GLfloat cy, GLfloat r, int num_segments){
 }
 
 void specialKeys( int key, int x, int y ){
-    const float step = 0.05;
+    const float step = 0.1;
     if(play){
         if (key == GLUT_KEY_RIGHT){
-            pxl += step;
-            pxr += step;
+            //pxl += step;
+            //pxr += step;
+            pos += step;
         }
         else if (key == GLUT_KEY_LEFT){
-            pxl -= step;
-            pxr -= step;
+            //pxl -= step;
+            //pxr -= step;
+            pos -= step;
         }
         else if(key == 32){
-            bullets.push_back(make_pair((GLfloat)((pxl+pxr)/2), -2.4));
+            bullets.push_back(make_pair((GLfloat)(pos), -2.4));
         }
         else if(key==GLUT_KEY_UP)
             displayBullets();
@@ -205,25 +225,58 @@ void display(){
 
     //DrawStarFilled(0, 2, 0.1, 5);
 
-
-
     //Drawing the player
-    glBegin(GL_TRIANGLES);
+    /*glBegin(GL_TRIANGLES);
         glVertex3f(pxl, -2.6, -10.0);
         glVertex3f(float((pxl+pxr)/2), -2.4, -10.0);
         glVertex3f(pxr, -2.6, -10.0);
+    glEnd();*/
+
+    glBegin(GL_QUADS);
+        //Quad 1
+            glVertex3f(pos-2*r, -2.6+r, -10);//a
+            glVertex3f(pos-r, -2.6+r,-10);//b
+            glVertex3f(pos-r, -2.6-r, -10);//c
+            glVertex3f(pos-2*r, -2.6-r,-10);//d
+        //Quad 2
+            glVertex3f(pos+r, -2.6+r, -10);//g
+            glVertex3f(pos+2*r, -2.6+r, -10);//h
+            glVertex3f(pos+2*r, -2.6-r, -10);//i
+            glVertex3f(pos+r, -2.6-r, -10);//j
+        //Quad 3
+            glVertex3f(pos-r, -2.6, -10);//e
+            glVertex3f(pos+r, -2.6, -10);//f
+            glVertex3f(pos+r, -2.6-r, -10);//j
+            glVertex3f(pos-r, -2.6-r, -10);//c
     glEnd();
 
     //generating harambaes <3 <3
-
+    /*glBegin(GL_QUADS);
+        //Quad 1
+            glVertex3f(0, 0, -10);//a
+            glVertex3f(0.2, 0,-10);//b
+            glVertex3f(0.2, -0.4, -10);//c
+            glVertex3f(0, -0.4,-10);//d
+        //Quad 2
+            glVertex3f(0.4,0,-10);//g
+            glVertex3f(0.6,0,-10);//h
+            glVertex3f(0.6,-0.4,-10);//i
+            glVertex3f(0.4,-0.4,-10);//j
+        //Quad 3
+            glVertex3f(0,-0.2,-10);//e
+            glVertex3f(0.6,-0.2,-10);//f
+            glVertex3f(0.6,-0.4,-10);//j
+            glVertex3f(0, -0.4, -10);//c
+    glEnd();*/
 
     if(play){
         if(detectCollision(1))
             play = true;
+        if(dead())
+            play=false;
     }
 
     //Moving the bullets every frame
-
     for(int i=0;i<bullets.size();++i){
         //DrawCircle(bullets[i].first, bullets[i].second, 0.1, 0.2);
         glBegin(GL_TRIANGLES);
@@ -232,6 +285,7 @@ void display(){
             glVertex3f(bullets[i].first+r, bullets[i].second-r, -10.0);
         glEnd();
     }
+    //outputText(0, 0, 0, 0, 0, "Hello world");
     glutSwapBuffers();
 }
 
