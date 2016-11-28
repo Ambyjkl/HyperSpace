@@ -1,6 +1,7 @@
 #include <GLUT/glut.h>
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
+#include <stdio.h>
 #include <math.h>
 #include <map>
 #include <vector>
@@ -17,6 +18,109 @@ using namespace std;
     3 -> dense horizontal from top
     4 -> 2 dense horizontal groups from either side of the screen
 */
+
+GLuint LoadTextureRAW( const char * filename, bool wrap )
+{
+  GLuint texture;
+  int width, height;
+  unsigned char * data;
+  FILE * file;
+
+  // open texture data
+  file = fopen( filename, "rb" );
+  if ( file == NULL ) return 0;
+
+  // allocate buffer
+  width = 256;
+  height = 256;
+  data = (unsigned char *) malloc( width * height * 3 );
+
+  // read texture data
+  fread( data, width * height * 3, 1, file );
+  fclose( file );
+
+  // allocate a texture name
+  glGenTextures( 1, &texture );
+
+  // select our current texture
+  glBindTexture( GL_TEXTURE_2D, texture );
+
+  // select modulate to mix texture with color for shading
+  glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+
+  // when texture area is small, bilinear filter the closest MIP map
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                   GL_LINEAR_MIPMAP_NEAREST );
+  // when texture area is large, bilinear filter the first MIP map
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
+  // if wrap is true, the texture wraps over at the edges (repeat)
+  //       ... false, the texture ends at the edges (clamp)
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                   wrap ? GL_REPEAT : GL_CLAMP );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                   wrap ? GL_REPEAT : GL_CLAMP );
+
+  // build our texture MIP maps
+  gluBuild2DMipmaps( GL_TEXTURE_2D, 3, width,
+    height, GL_RGB, GL_UNSIGNED_BYTE, data );
+
+  // free buffer
+  free( data );
+
+  return texture;
+
+}
+
+void FreeTexture( GLuint texture )
+{
+
+  glDeleteTextures( 1, &texture );
+
+}
+
+/*void SetupRC(void){
+    GLint textureName;
+    // some init gl code here
+
+    // the texture (2x2)
+    GLbyte textureData[] = { 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 0 };
+    GLsizei width = 2;
+    GLsizei heigth = 2;
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glBindTexture(GL_TEXTURE_2D, &textureName);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)textureData);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTE R,GL_LINEAR);
+}
+
+
+void texturize(){
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the window with current clearing color
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_NORMALIZE);
+    glPushMatrix();
+    glDisable(GL_LIGHTING); // Draw plane that the cube rests on
+    glEnable(GL_TEXTURE_2D); // should use shader, but for an example fixed pipeline is ok
+    glBindTexture(GL_TEXTURE_2D, m_texture[0]);
+    glBegin(GL_TRIANGLE_STRIP); // draw something with the texture on
+    glTexCoord2f(0.0, 0.0);
+    glVertex2f(-1.0, -1.0);
+
+    glTexCoord2f(1.0, 0.0);
+    glVertex2f(1.0, -1.0);
+
+    glTexCoord2f(0.0, 1.0);
+    glVertex2f(-1.0, 1.0);
+
+    glTexCoord2f(1.0, 1.0);
+    glVertex2f(1.0, 1.0);
+    glEnd();
+
+    glPopMatrix();
+
+    glutSwapBuffers();
+}*/
 
 vector<pair<GLfloat, GLfloat> > bullets, aliens1, aliens2, aliens3, aliens4;
 pair<GLfloat, GLfloat> alienUpdate;
@@ -215,6 +319,7 @@ void init(){ // Called before main loop to set up the program
     glClearColor(0.0, 0.08, 0.42, 0.5);
     glEnable(GL_DEPTH_TEST);
     glShadeModel(GL_SMOOTH);
+
 }
 
 // Called at the start of the program, after a glutPostRedisplay() and during idle
@@ -222,17 +327,22 @@ void init(){ // Called before main loop to set up the program
 void display(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
+    GLuint texture = LoadTextureRAW("star.bmp", true);
+    glEnable( GL_TEXTURE_2D );
+    glBindTexture( GL_TEXTURE_2D, texture );
 
-    //DrawStarFilled(0, 2, 0.1, 5);
-
-    //Drawing the player
-    /*glBegin(GL_TRIANGLES);
-        glVertex3f(pxl, -2.6, -10.0);
-        glVertex3f(float((pxl+pxr)/2), -2.4, -10.0);
-        glVertex3f(pxr, -2.6, -10.0);
-    glEnd();*/
+    glPushMatrix();
+    glBegin( GL_QUADS );
+    glTexCoord2d(0.0,0.0); glVertex3f(-3.0,-3.5, -11);
+    glTexCoord2d(1.0,0.0); glVertex3f(+3.0,-3.5, -11);
+    glTexCoord2d(1.0,1.0); glVertex3f(+3.0,+3.5, -11);
+    glTexCoord2d(0.0,1.0); glVertex3f(-3.0,+3.5, -11);
+    glEnd();
+    glPopMatrix();
+    FreeTexture( texture );
 
     glBegin(GL_QUADS);
+        glColor3f(1.0f, 1.0f, 1.0f);
         //Quad 1
             glVertex3f(pos-2*r, -2.6+r, -10);//a
             glVertex3f(pos-r, -2.6+r,-10);//b
@@ -250,30 +360,13 @@ void display(){
             glVertex3f(pos-r, -2.6-r, -10);//c
     glEnd();
 
-    //generating harambaes <3 <3
-    /*glBegin(GL_QUADS);
-        //Quad 1
-            glVertex3f(0, 0, -10);//a
-            glVertex3f(0.2, 0,-10);//b
-            glVertex3f(0.2, -0.4, -10);//c
-            glVertex3f(0, -0.4,-10);//d
-        //Quad 2
-            glVertex3f(0.4,0,-10);//g
-            glVertex3f(0.6,0,-10);//h
-            glVertex3f(0.6,-0.4,-10);//i
-            glVertex3f(0.4,-0.4,-10);//j
-        //Quad 3
-            glVertex3f(0,-0.2,-10);//e
-            glVertex3f(0.6,-0.2,-10);//f
-            glVertex3f(0.6,-0.4,-10);//j
-            glVertex3f(0, -0.4, -10);//c
-    glEnd();*/
-
     if(play){
         if(detectCollision(1))
             play = true;
-        if(dead())
+        if(dead()){
+            cout<<"Game over\n";
             play=false;
+        }
     }
 
     //Moving the bullets every frame
@@ -328,7 +421,7 @@ int main(int argc, char **argv){
 
 //Redundant for now
 //Do not touch this part
-
+/*
 GLuint LoadTexture(const char *filename){
     GLuint texture;
     int width, height;
@@ -368,3 +461,4 @@ GLuint LoadTexture(const char *filename){
 
     return texture;
 }
+*/
