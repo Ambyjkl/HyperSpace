@@ -72,57 +72,11 @@ GLuint LoadTextureRAW( const char * filename, bool wrap )
 
 }
 
-void FreeTexture( GLuint texture )
-{
-
-  glDeleteTextures( 1, &texture );
-
+void FreeTexture( GLuint texture ){
+    glDeleteTextures( 1, &texture );
 }
 
-/*void SetupRC(void){
-    GLint textureName;
-    // some init gl code here
-
-    // the texture (2x2)
-    GLbyte textureData[] = { 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 0 };
-    GLsizei width = 2;
-    GLsizei heigth = 2;
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glBindTexture(GL_TEXTURE_2D, &textureName);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)textureData);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTE R,GL_LINEAR);
-}
-
-
-void texturize(){
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the window with current clearing color
-    glShadeModel(GL_SMOOTH);
-    glEnable(GL_NORMALIZE);
-    glPushMatrix();
-    glDisable(GL_LIGHTING); // Draw plane that the cube rests on
-    glEnable(GL_TEXTURE_2D); // should use shader, but for an example fixed pipeline is ok
-    glBindTexture(GL_TEXTURE_2D, m_texture[0]);
-    glBegin(GL_TRIANGLE_STRIP); // draw something with the texture on
-    glTexCoord2f(0.0, 0.0);
-    glVertex2f(-1.0, -1.0);
-
-    glTexCoord2f(1.0, 0.0);
-    glVertex2f(1.0, -1.0);
-
-    glTexCoord2f(0.0, 1.0);
-    glVertex2f(-1.0, 1.0);
-
-    glTexCoord2f(1.0, 1.0);
-    glVertex2f(1.0, 1.0);
-    glEnd();
-
-    glPopMatrix();
-
-    glutSwapBuffers();
-}*/
-
-vector<pair<GLfloat, GLfloat> > bullets, aliens1, aliens2, aliens3, aliens4;
+vector<pair<GLfloat, GLfloat> > bullets, aliens1, aliens21, aliens22, aliens3, aliens4;
 pair<GLfloat, GLfloat> alienUpdate;
 map<GLfloat, pair<GLfloat, int> > m;
 GLfloat r = 0.15, pxl = -0.15, pxr = 0.15, pos = 0;
@@ -149,11 +103,16 @@ pair<GLfloat, GLfloat> inc(pair<GLfloat, GLfloat> p){
 pair<GLfloat, GLfloat> incAlien(pair<GLfloat, GLfloat> p){
     return make_pair(p.first, p.second-=0.005);
 }
+pair<GLfloat, GLfloat> incAlien21(pair<GLfloat, GLfloat> p){
+    return make_pair(p.first+=0.005, p.second-=0.005);
+}
+pair<GLfloat, GLfloat> incAlien22(pair<GLfloat, GLfloat> p){
+    return make_pair(p.first-=0.005, p.second-=0.005);
+}
 
 void displayBullets(){
     for(int i=0;i<bullets.size();++i)
         cout<<bullets[i].first<<", "<<bullets[i].second<<", pos = "<<pos<<endl;
-
 }
 
 void showAliens(int);
@@ -163,10 +122,17 @@ void genAliens(int);
 
 void showAliens(int formation){
     if(formation==1){
-        for(int i=0;i<aliens1.size();i++){
+        for(int i=0;i<aliens1.size();i++)
             DrawStarFilled(aliens1[i].first, aliens1[i].second, 0.1, 5);
-        }
         transform(begin(aliens1), end(aliens1), begin(aliens1), incAlien);
+    }
+    else if(formation==2){
+        for(int i=0;i<aliens21.size();i++)
+            DrawStarFilled(aliens21[i].first, aliens21[i].second, 0.1, 5);
+        transform(begin(aliens21), end(aliens21), begin(aliens21), incAlien21);
+        for(int i=0;i<aliens22.size();i++)
+            DrawStarFilled(aliens22[i].first, aliens22[i].second, 0.1, 5);
+        transform(begin(aliens22), end(aliens22), begin(aliens22), incAlien22);
     }
 }
 
@@ -179,7 +145,7 @@ bool aliensGone(int formation){
     a[3] = aliens4.size();
     //cout<<a[0]<<endl;
     if(a[formation-1]==0){
-        cout<<"it is 0\n";
+        //cout<<"it is 0\n";
         return true;
     }
     return false;
@@ -190,33 +156,46 @@ int newFormation(){
     return 1;
 }
 
-bool detectCollision(int formation){
-    m.clear();
-    for(int i=0;i<aliens1.size();++i)
-        m[aliens1[i].second] = make_pair(aliens1[i].first, i);
+void removeAliens(int index, int f){
+    if(f==1)
+        aliens1.erase(aliens1.begin()+index);
+    else if(f==2){
+        if(index>=aliens21.size())
+            aliens22.erase(aliens22.begin()+index-aliens21.size());
+        else
+            aliens21.erase(aliens21.begin()+index);
+    }
+    else if(f==3)
+        aliens3.erase(aliens3.begin()+index);
 
-    /*for(int i=0;i<bullets.size();++i){
-        //cout<<"main loop\n";
-        if(m.find(bullets[i].second)!=m.end()){
-            cout<<"something\n";
-            if(m[bullets[i].second+r].first<=bullets[i].first+r &&
-               m[bullets[i].second+r].first>=bullets[i].first-r){
-                    aliens1.erase(aliens1.begin()+m[bullets[i].second].second);
-                    bullets.erase(bullets.begin()+i);
-                    cout<<"collision\n";
-                    return true;
-            }
-        }
-    }*/
+}
+
+bool detectCollision(int formation){
+    vector<pair<GLfloat, GLfloat> > al;
+    switch(formation){
+        case 1:
+            al = aliens1;
+            break;
+        case 2:
+            al.reserve(aliens21.size()+aliens22.size());
+            al.insert(al.end(), aliens21.begin(), aliens21.end());
+            al.insert(al.end(), aliens22.begin(), aliens22.end());
+            break;
+        case 3:
+            al = aliens3;
+            break;
+    }
+    m.clear();
+    for(int i=0;i<al.size();++i)
+        m[al[i].second] = make_pair(al[i].first, i);
     for(int i=0;i<bullets.size();++i){
-        for(int j=0;j<aliens1.size();++j){
-            if(fabs((float)(aliens1[j].second-bullets[i].second))<=0.1){
-                //cout<<"something\n";
-                if(fabs((float)(aliens1[j].first-bullets[i].first))<=r){
-                    aliens1.erase(aliens1.begin()+j);
+        for(int j=0;j<al.size();++j){
+            if(fabs((float)(al[j].second-bullets[i].second))<=0.1){
+                if(fabs((float)(al[j].first-bullets[i].first))<=r){
+                    //aliens1.erase(aliens1.begin()+j);
+                    removeAliens(j, formation);
                     bullets.erase(bullets.begin()+i);
                     firstHit = true;
-                    //cout<<"collision "<<aliens1.size()<<"\n";
                     return true;
                 }
             }
@@ -230,8 +209,7 @@ bool detectCollision(int formation){
             firstHit = false;
             //cout<<cf<<endl;
         }
-    //if(firstHit)
-    //    cout<<"something is wrong\n";
+
     showAliens(cf);
     if(bullets.size()>=0 && play)
         transform(begin(bullets), end(bullets), begin(bullets), inc);
@@ -247,15 +225,26 @@ bool dead(){
 }
 
 void genAliens(int formation){
+    /*
+        ALIEN FORMATIONS
+        1 -> simple horizontal
+        2 -> 2 groups, each coming from either side of the screen
+        3 -> dense horizontal from top
+        4 -> 2 dense horizontal groups from either side of the screen
+    */
     aliens1.clear();
     aliens2.clear();
     aliens3.clear();
     aliens4.clear();
     if(formation==1){
-        for(GLfloat i=-1;i<=1;i+=0.4){
-            //cout<<i<<endl;
+        for(GLfloat i=-1;i<=1;i+=0.4)
             aliens1.push_back(make_pair(i, 2));
-        }
+    }
+    if(formation==2){
+        for(GLfloat i=-2;i<=-1.1;i+=0.3)
+            aliens21.push_back(make_pair(i, 2))
+        for(GLfloat i=2;i>=1.1;i-=0.3)
+            aliens22.push_back(make_pair(i, 1.5))
     }
 }
 
@@ -418,47 +407,3 @@ int main(int argc, char **argv){
     glutMainLoop();
     return 0;
 }
-
-//Redundant for now
-//Do not touch this part
-/*
-GLuint LoadTexture(const char *filename){
-    GLuint texture;
-    int width, height;
-    unsigned char *data;
-    FILE *file;
-    file = fopen(filename, "rb");
-
-    if(file==NULL)
-        return 0;
-    width = 1024;
-    height = 512;
-    data = (unsigned char *)malloc(width * height * 3);
-
-    fread(data, width * height * 3, 1, file);
-    fclose(file);
-
-    for(int i = 0; i < width * height ; ++i){
-        int index = i*3;
-        unsigned char B,R;
-        B = data[index];
-        R = data[index+2];
-
-        data[index] = R;
-        data[index+2] = B;
-    }
-
-    glGenTextures( 1, &texture );
-    glBindTexture( GL_TEXTURE_2D, texture );
-    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_NEAREST );
-
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_REPEAT );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_REPEAT );
-    gluBuild2DMipmaps( GL_TEXTURE_2D, 3, width, height,GL_RGB, GL_UNSIGNED_BYTE, data );
-    free(data);
-
-    return texture;
-}
-*/
