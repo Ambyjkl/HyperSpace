@@ -164,14 +164,12 @@ do
             xdotool keyup Up
         fi;;
         p)
-        echo "PRIMARY!"
-        xdotool keydown space
-        sleep 20ms
+        xdotool keydown space;;
+        o)
         xdotool keyup space;;
         s)
-        echo "SECONDARY!"
         xdotool keydown Return
-        sleep 20ms
+        sleep 0.040s
         xdotool keyup Return;;
     esac
 done
