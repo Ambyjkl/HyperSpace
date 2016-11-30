@@ -1,23 +1,36 @@
-#include <GLUT/glut.h>
+#ifdef __APPLE__
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
+#include <GLUT/glut.h>
+#else
+#ifdef _WIN32
+  #include <windows.h>
+#endif
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glut.h>
+#endif
 #include <stdio.h>
 #include <math.h>
 #include <map>
 #include <vector>
 #include <utility>
-#include <stdlib.h>
 #include <iostream>
+#include <stdlib.h>
+#include <time.h>
 
 using namespace std;
+const float step = 0.1;
 
 /*
     ALIEN FORMATIONS
     1 -> simple horizontal
-    2 -> 2 gorups, each coming from either side of the screen
+    2 -> 2 groups, each coming from either side of the screen
     3 -> dense horizontal from top
     4 -> 2 dense horizontal groups from either side of the screen
 */
+
+int keyPress[3] = {0, 0, 0}; //left, right, shoot
 
 GLuint LoadTextureRAW( const char * filename, bool wrap )
 {
@@ -81,10 +94,29 @@ pair<GLfloat, GLfloat> alienUpdate;
 map<GLfloat, pair<GLfloat, int> > m;
 GLfloat r = 0.15, pxl = -0.15, pxr = 0.15, pos = 0;
 bool play = true, firstHit = false;
-int level = 0, cf = 1;
+int level = 0, cf = 2;
 
-void checkRedundant(){
-
+void checkRedundant(int formation){
+    //cout<<formation<<endl;
+    switch(formation){
+        case 1:
+            for(int i=0;i<aliens1.size();++i)
+                if(aliens1[i].second<-3)
+                    aliens1.erase(aliens1.begin()+i);
+            break;
+        case 2:
+            for(int i=0;i<aliens21.size();++i)
+                if(aliens21[i].first>2){
+                    cout<<"remove 21 "<<i<<endl;
+                    aliens21.erase(aliens21.begin()+i);
+                }
+            for(int i=0;i<aliens22.size();++i)
+                if(aliens22[i].first<-2){
+                    cout<<"remove 22 "<<i<<endl;
+                    aliens22.erase(aliens22.begin()+i);
+                }
+            break;
+    }
 }
 
 void outputText(int x, int y, float r, float g, float b, char *string){
@@ -101,13 +133,13 @@ pair<GLfloat, GLfloat> inc(pair<GLfloat, GLfloat> p){
     return make_pair(p.first, p.second+=0.1);
 }
 pair<GLfloat, GLfloat> incAlien(pair<GLfloat, GLfloat> p){
-    return make_pair(p.first, p.second-=0.005);
+    return make_pair(p.first, p.second-=(0.005+(level*0.0005)));
 }
 pair<GLfloat, GLfloat> incAlien21(pair<GLfloat, GLfloat> p){
-    return make_pair(p.first+=0.005, p.second-=0.005);
+    return make_pair(p.first+=0.005+(level*0.0005), p.second-=(0.005+(level*0.0005)));
 }
 pair<GLfloat, GLfloat> incAlien22(pair<GLfloat, GLfloat> p){
-    return make_pair(p.first-=0.005, p.second-=0.005);
+    return make_pair(p.first-=(0.005+(level*0.0005)), p.second-=(0.005+(level*0.0005)));
 }
 
 void displayBullets(){
@@ -140,7 +172,7 @@ void showAliens(int formation){
 bool aliensGone(int formation){
     int a[4];
     a[0] = aliens1.size();
-    a[1] = aliens2.size();
+    a[1] = aliens21.size() + aliens22.size();
     a[2] = aliens3.size();
     a[3] = aliens4.size();
     //cout<<a[0]<<endl;
@@ -201,14 +233,16 @@ bool detectCollision(int formation){
             }
         }
     }
-    if(firstHit)
-        if(aliensGone(cf)){
-            cout<<"gone\n";
-            cf = 1;
-            genAliens(cf);
-            firstHit = false;
-            //cout<<cf<<endl;
-        }
+    checkRedundant(cf);
+    //if(firstHit)
+    if(aliensGone(cf)){
+        level++;
+        cout<<"gone\n";
+        cf = rand() % 2 + 1;
+        genAliens(cf);
+        firstHit = false;
+        //cout<<cf<<endl;
+    }
 
     showAliens(cf);
     if(bullets.size()>=0 && play)
@@ -233,7 +267,8 @@ void genAliens(int formation){
         4 -> 2 dense horizontal groups from either side of the screen
     */
     aliens1.clear();
-    aliens2.clear();
+    aliens21.clear();
+    aliens22.clear();
     aliens3.clear();
     aliens4.clear();
     if(formation==1){
@@ -242,9 +277,9 @@ void genAliens(int formation){
     }
     if(formation==2){
         for(GLfloat i=-2;i<=-1.1;i+=0.3)
-            aliens21.push_back(make_pair(i, 2))
+            aliens21.push_back(make_pair(i, 2));
         for(GLfloat i=2;i>=1.1;i-=0.3)
-            aliens22.push_back(make_pair(i, 1.5))
+            aliens22.push_back(make_pair(i, 1.5));
     }
 }
 
@@ -281,27 +316,42 @@ void DrawCircle(GLfloat cx, GLfloat cy, GLfloat r, int num_segments){
     bullets.push_back(make_pair(cx, cy));
 }
 
-void specialKeys( int key, int x, int y ){
-    const float step = 0.1;
+void kfu(unsigned char key, int x, int y){
     if(play){
-        if (key == GLUT_KEY_RIGHT){
-            //pxl += step;
-            //pxr += step;
-            pos += step;
+        if (key == 'a'){
+            keyPress[1] = 0;
         }
-        else if (key == GLUT_KEY_LEFT){
-            //pxl -= step;
-            //pxr -= step;
-            pos -= step;
+        if (key == 'd'){
+            keyPress[0] = 0;
         }
-        else if(key == 32){
-            bullets.push_back(make_pair((GLfloat)(pos), -2.4));
-        }
-        else if(key==GLUT_KEY_UP)
-            displayBullets();
+        if(key == 's')
+            keyPress[2] = 0;
+
         glutPostRedisplay();
     }
-        //DrawCircle((GLfloat)((pxl+pxr)/2), -2.4, 0.1, 0.2);
+}
+
+void kf(unsigned char key, int x, int y){
+    if(play){
+        if (key == 'a'){
+            if(pos<1.7)
+                //pos += step;
+                keyPress[1] = 1;
+        }
+        if (key == 'd'){
+            if(pos>-1.7)
+                //pos -= step;
+                keyPress[0] = 1;
+        }
+        if(key == 's')
+            keyPress[2] = 1;
+
+        glutPostRedisplay();
+    }
+    /*if(key == 'a'){
+        keyPress[2] = 1;
+        bullets.push_back(make_pair((GLfloat)(pos), -2.4));
+    }*/
 }
 
 void init(){ // Called before main loop to set up the program
@@ -314,6 +364,7 @@ void init(){ // Called before main loop to set up the program
 // Called at the start of the program, after a glutPostRedisplay() and during idle
 // to display a frame
 void display(){
+    //checkRedundant(cf);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     GLuint texture = LoadTextureRAW("star.bmp", true);
@@ -350,14 +401,21 @@ void display(){
     glEnd();
 
     if(play){
-        if(detectCollision(1))
+        if(detectCollision(cf))
             play = true;
         if(dead()){
             cout<<"Game over\n";
             play=false;
         }
     }
-
+    if(keyPress[0]&&pos<=1.6)
+        pos += step;
+    if(keyPress[1]&&pos>=-1.6)
+        pos -= step;
+    if(keyPress[2]){
+        bullets.push_back(make_pair((GLfloat)(pos), -2.4));
+        keyPress[2] = 0;
+    }
     //Moving the bullets every frame
     for(int i=0;i<bullets.size();++i){
         //DrawCircle(bullets[i].first, bullets[i].second, 0.1, 0.2);
@@ -383,6 +441,7 @@ void reshape(int w, int h){
 
 
 int main(int argc, char **argv){
+    srand(time(NULL));
     glutInit(&argc, argv); // Initializes glut
     // Sets up a double buffer with RGBA components and a depth component
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA);
@@ -400,7 +459,9 @@ int main(int argc, char **argv){
     glutReshapeFunc(reshape);
     glutDisplayFunc(display);
     glutIdleFunc(display);
-    glutSpecialFunc(specialKeys);
+    //glutSpecialFunc(specialKeys);
+    glutKeyboardFunc(kf);
+    glutKeyboardUpFunc(kfu);
     init();
 
     // Starts the program.
