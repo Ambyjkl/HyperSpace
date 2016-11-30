@@ -4,7 +4,7 @@
 #include <GLUT/glut.h>
 #else
 #ifdef _WIN32
-  #include <windows.h>
+#include <windows.h>
 #endif
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -20,84 +20,61 @@
 #include <time.h>
 
 using namespace std;
+
 const float step = 0.1;
-
-/*
-    ALIEN FORMATIONS
-    1 -> simple horizontal
-    2 -> 2 groups, each coming from either side of the screen
-    3 -> dense horizontal from top
-    4 -> 2 dense horizontal groups from either side of the screen
-*/
-
 int keyPress[3] = {0, 0, 0}; //left, right, shoot
+vector<pair<GLfloat, GLfloat> > alienBullets, bullets, aliens1, aliens21, aliens22, aliens3, aliens4;
+map<GLfloat, pair<GLfloat, int> > m;
+GLfloat r = 0.15, pxl = -0.15, pxr = 0.15, pos = 0;
+bool play = true, firstHit = false;
+int level = 0, cf = 2, score = 0;
 
-GLuint LoadTextureRAW( const char * filename, bool wrap )
-{
-  GLuint texture;
-  int width, height;
-  unsigned char * data;
-  FILE * file;
+void showAliens(int);
+bool aliensGone(int);
+void DrawStarFilled (float cx, float cy, float radius, int numPoints);
+void genAliens(int);
 
-  // open texture data
-  file = fopen( filename, "rb" );
-  if ( file == NULL ) return 0;
+GLuint LoadTextureRAW( const char * filename, bool wrap ){
+    GLuint texture;
+    int width, height;
+    unsigned char * data;
+    FILE * file;
 
-  // allocate buffer
-  width = 256;
-  height = 256;
-  data = (unsigned char *) malloc( width * height * 3 );
+    file = fopen( filename, "rb" );
+    if(file == NULL)
+        return 0;
 
-  // read texture data
-  fread( data, width * height * 3, 1, file );
-  fclose( file );
+    width = 256;
+    height = 256;
+    data = (unsigned char *) malloc( width * height * 3 );
 
-  // allocate a texture name
-  glGenTextures( 1, &texture );
+    fread( data, width * height * 3, 1, file );
+    fclose( file );
 
-  // select our current texture
-  glBindTexture( GL_TEXTURE_2D, texture );
+    glGenTextures( 1, &texture );
+    glBindTexture( GL_TEXTURE_2D, texture );
+    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_NEAREST );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                    wrap ? GL_REPEAT : GL_CLAMP );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                    wrap ? GL_REPEAT : GL_CLAMP );
 
-  // select modulate to mix texture with color for shading
-  glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+    gluBuild2DMipmaps( GL_TEXTURE_2D, 3, width,
+                        height, GL_RGB, GL_UNSIGNED_BYTE, data );
 
-  // when texture area is small, bilinear filter the closest MIP map
-  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                   GL_LINEAR_MIPMAP_NEAREST );
-  // when texture area is large, bilinear filter the first MIP map
-  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    free(data);
 
-  // if wrap is true, the texture wraps over at the edges (repeat)
-  //       ... false, the texture ends at the edges (clamp)
-  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                   wrap ? GL_REPEAT : GL_CLAMP );
-  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                   wrap ? GL_REPEAT : GL_CLAMP );
-
-  // build our texture MIP maps
-  gluBuild2DMipmaps( GL_TEXTURE_2D, 3, width,
-    height, GL_RGB, GL_UNSIGNED_BYTE, data );
-
-  // free buffer
-  free( data );
-
-  return texture;
-
+    return texture;
 }
 
 void FreeTexture( GLuint texture ){
     glDeleteTextures( 1, &texture );
 }
 
-vector<pair<GLfloat, GLfloat> > bullets, aliens1, aliens21, aliens22, aliens3, aliens4;
-pair<GLfloat, GLfloat> alienUpdate;
-map<GLfloat, pair<GLfloat, int> > m;
-GLfloat r = 0.15, pxl = -0.15, pxr = 0.15, pos = 0;
-bool play = true, firstHit = false;
-int level = 0, cf = 2;
-
 void checkRedundant(int formation){
-    //cout<<formation<<endl;
     switch(formation){
         case 1:
             for(int i=0;i<aliens1.size();++i)
@@ -120,13 +97,11 @@ void checkRedundant(int formation){
 }
 
 void outputText(int x, int y, float r, float g, float b, char *string){
-  glColor3f( r, g, b );
-  glRasterPos2f(x, y);
-  int len, i;
-  len = (int)strlen(string);
-  for (i = 0; i < len; i++) {
-    glutBitmapCharacter(GLUT_BITMAP_8_BY_13, string[i]);
-  }
+    glColor3f( r, g, b );
+    glRasterPos2f(x, y);
+    int len = (int)strlen(string);
+    for(int i = 0; i < len; i++)
+        glutBitmapCharacter(GLUT_BITMAP_8_BY_13, string[i]);
 }
 
 pair<GLfloat, GLfloat> inc(pair<GLfloat, GLfloat> p){
@@ -146,11 +121,6 @@ void displayBullets(){
     for(int i=0;i<bullets.size();++i)
         cout<<bullets[i].first<<", "<<bullets[i].second<<", pos = "<<pos<<endl;
 }
-
-void showAliens(int);
-bool aliensGone(int);
-void DrawStarFilled (float cx, float cy, float radius, int numPoints);
-void genAliens(int);
 
 void showAliens(int formation){
     if(formation==1){
@@ -175,17 +145,9 @@ bool aliensGone(int formation){
     a[1] = aliens21.size() + aliens22.size();
     a[2] = aliens3.size();
     a[3] = aliens4.size();
-    //cout<<a[0]<<endl;
-    if(a[formation-1]==0){
-        //cout<<"it is 0\n";
+    if(a[formation-1]==0)
         return true;
-    }
     return false;
-}
-
-//temporary
-int newFormation(){
-    return 1;
 }
 
 void removeAliens(int index, int f){
@@ -227,6 +189,7 @@ bool detectCollision(int formation){
                     //aliens1.erase(aliens1.begin()+j);
                     removeAliens(j, formation);
                     bullets.erase(bullets.begin()+i);
+                    score++;
                     firstHit = true;
                     return true;
                 }
@@ -234,7 +197,6 @@ bool detectCollision(int formation){
         }
     }
     checkRedundant(cf);
-    //if(firstHit)
     if(aliensGone(cf)){
         level++;
         cout<<"gone\n";
@@ -271,10 +233,9 @@ void genAliens(int formation){
     aliens22.clear();
     aliens3.clear();
     aliens4.clear();
-    if(formation==1){
+    if(formation==1)
         for(GLfloat i=-1;i<=1;i+=0.4)
             aliens1.push_back(make_pair(i, 2));
-    }
     if(formation==2){
         for(GLfloat i=-2;i<=-1.1;i+=0.3)
             aliens21.push_back(make_pair(i, 2));
@@ -301,57 +262,31 @@ void DrawStarFilled (float cx, float cy, float radius, int numPoints){
     glEnd();
 }
 
-void DrawCircle(GLfloat cx, GLfloat cy, GLfloat r, int num_segments){
-    /*glBegin(GL_LINE_LOOP);
-    for(int ii = 0; ii < num_segments; ii++){
-        float theta = 2.0f * 3.1415926f * float(ii) / float(num_segments);//get the current angle
-
-        float x = r * cosf(theta);//calculate the x component
-        float y = r * sinf(theta);//calculate the y component
-
-        glVertex2f(x + cx, y + cy);//output vertex
-        bullets.push_back(make_pair(x+cx, y+cy));
-    }
-    glEnd();*/
-    bullets.push_back(make_pair(cx, cy));
-}
-
 void kfu(unsigned char key, int x, int y){
     if(play){
-        if (key == 'a'){
+        if (key == 'a')
             keyPress[1] = 0;
-        }
-        if (key == 'd'){
+        if (key == 'd')
             keyPress[0] = 0;
-        }
         if(key == 's')
             keyPress[2] = 0;
-
         glutPostRedisplay();
     }
 }
 
 void kf(unsigned char key, int x, int y){
     if(play){
-        if (key == 'a'){
+        if (key == 'a')
             if(pos<1.7)
-                //pos += step;
                 keyPress[1] = 1;
-        }
-        if (key == 'd'){
+        if (key == 'd')
             if(pos>-1.7)
-                //pos -= step;
                 keyPress[0] = 1;
-        }
         if(key == 's')
             keyPress[2] = 1;
 
         glutPostRedisplay();
     }
-    /*if(key == 'a'){
-        keyPress[2] = 1;
-        bullets.push_back(make_pair((GLfloat)(pos), -2.4));
-    }*/
 }
 
 void init(){ // Called before main loop to set up the program
@@ -361,10 +296,7 @@ void init(){ // Called before main loop to set up the program
 
 }
 
-// Called at the start of the program, after a glutPostRedisplay() and during idle
-// to display a frame
 void display(){
-    //checkRedundant(cf);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     GLuint texture = LoadTextureRAW("star.bmp", true);
@@ -418,7 +350,6 @@ void display(){
     }
     //Moving the bullets every frame
     for(int i=0;i<bullets.size();++i){
-        //DrawCircle(bullets[i].first, bullets[i].second, 0.1, 0.2);
         glBegin(GL_TRIANGLES);
             glVertex3f(bullets[i].first-r, bullets[i].second-r, -10.0);
             glVertex3f(bullets[i].first, bullets[i].second, -10.0);
@@ -429,7 +360,6 @@ void display(){
     glutSwapBuffers();
 }
 
-// Called every time a window is resized to resize the projection matrix
 void reshape(int w, int h){
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
@@ -442,29 +372,20 @@ void reshape(int w, int h){
 
 int main(int argc, char **argv){
     srand(time(NULL));
-    glutInit(&argc, argv); // Initializes glut
-    // Sets up a double buffer with RGBA components and a depth component
+    glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA);
-    // Sets the window size to 512*512 square pixels
     glutInitWindowSize(512, 1024);
-    // Sets the window position to the upper left
     glutInitWindowPosition(0, 0);
-    // Creates a window using internal glut functionality
     glutCreateWindow("HyperSpace");
 
-
-    //cf = newFormation();
     genAliens(cf);
-    // passes reshape and display functions to the OpenGL machine for callback
     glutReshapeFunc(reshape);
     glutDisplayFunc(display);
     glutIdleFunc(display);
-    //glutSpecialFunc(specialKeys);
     glutKeyboardFunc(kf);
     glutKeyboardUpFunc(kfu);
     init();
 
-    // Starts the program.
     glutMainLoop();
     return 0;
 }
