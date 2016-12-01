@@ -27,13 +27,13 @@
 using namespace std;
 
 const float step = 0.1;
-int keyPress[3] = {0, 0, 0}; //left, right, shoot
-vector<pair<GLfloat, GLfloat> > alienBullets, bullets, aliens1, aliens21, aliens22, aliens3, aliens4;
+int keyPress[4] = {0, 0, 0, 0}; //left, right, shoot
+vector<pair<GLfloat, GLfloat> > sec, alienBullets, bullets, aliens1, aliens21, aliens22, aliens3, aliens4;
 map<GLfloat, pair<GLfloat, int> > m;
 GLfloat r = 0.15, pxl = -0.15, pxr = 0.15, pos = 0;
 bool play = true, firstHit = false;
 float multiplier = 0.001;
-int level = 0, cf = 2, score = 0, lives = 10, ehs;
+int level = 0, cf = 2, score = 0, lives = 10, ehs, GID;
 
 void showAliens(int);
 bool aliensGone(int);
@@ -129,6 +129,12 @@ void checkRedundant(int formation){
                 }
             break;
     }
+    for(int i=0;i<bullets.size();++i)
+        if(bullets[i].second>3)
+            bullets.erase(bullets.begin()+i);
+    for(int i=0;i<sec.size();++i)
+        if(sec[i].second>3)
+            sec.erase(sec.begin()+i);
 }
 
 int getScore(){
@@ -191,18 +197,29 @@ bool aliensGone(int formation){
     return false;
 }
 
-void removeAliens(int index, int f){
-    if(f==1)
-        aliens1.erase(aliens1.begin()+index);
-    else if(f==2){
-        if(index>=aliens21.size())
-            aliens22.erase(aliens22.begin()+index-aliens21.size());
-        else
-            aliens21.erase(aliens21.begin()+index);
+void removeAliens(int index, int f, int all = 0){
+    if(all){
+        if(f==1)
+            aliens1.clear();
+        else if(f==2){
+            aliens21.clear();
+            aliens22.clear();
+        }
+        else if(f==3)
+            aliens3.clear();
     }
-    else if(f==3)
-        aliens3.erase(aliens3.begin()+index);
-
+    else{
+        if(f==1)
+            aliens1.erase(aliens1.begin()+index);
+        else if(f==2){
+            if(index>=aliens21.size())
+                aliens22.erase(aliens22.begin()+index-aliens21.size());
+            else
+                aliens21.erase(aliens21.begin()+index);
+        }
+        else if(f==3)
+            aliens3.erase(aliens3.begin()+index);
+    }
 }
 
 bool detectCollision(int formation){
@@ -237,6 +254,20 @@ bool detectCollision(int formation){
             }
         }
     }
+    for(int i=0;i<sec.size();++i){
+        for(int j=0;j<al.size();++j){
+            if(fabs((float)(al[j].second-sec[i].second))<=0.1){
+                if(fabs((float)(al[j].first-sec[i].first))<=r/2){
+                    //aliens1.erase(aliens1.begin()+j);
+                    removeAliens(j, formation, 1);
+                    sec.erase(sec.begin()+i);
+                    score++;
+                    firstHit = true;
+                    return true;
+                }
+            }
+        }
+    }
     checkRedundant(cf);
     if(aliensGone(cf)){
         level++;
@@ -250,6 +281,8 @@ bool detectCollision(int formation){
     showAliens(cf);
     if(bullets.size()>=0 && play)
         transform(begin(bullets), end(bullets), begin(bullets), inc);
+    if(sec.size()>=0 && play)
+        transform(begin(sec), end(sec), begin(sec), inc);
 
     return false;
 }
@@ -311,6 +344,8 @@ void kfu(unsigned char key, int x, int y){
             keyPress[0] = 0;
         if(key == 's')
             keyPress[2] = 0;
+        if(key == 'z')
+            keyPress[3] = 0;
         glutPostRedisplay();
     }
 }
@@ -325,7 +360,8 @@ void kf(unsigned char key, int x, int y){
                 keyPress[0] = 1;
         if(key == 's')
             keyPress[2] = 1;
-
+        if(key == 'z')
+            keyPress[3] = 1;
         glutPostRedisplay();
     }
 }
@@ -378,10 +414,13 @@ void display(){
         outputTextOver(-0.5, 0.2, "GAME OVER!");
         if(score>ehs){
             putScore(score);
-            outputText(-0.5, -0.4, "New high score!");
+            outputText(-0.45, 0, "New high score!");
         }
+        for(long long i=0;i<(long long)500000000;++i);
+        glutDestroyWindow(GID);
+        exit(0);
+        return;
     }
-
     if(play){
         if(detectCollision(cf))
             play = true;
@@ -400,12 +439,29 @@ void display(){
         bullets.push_back(make_pair((GLfloat)(pos), -2.4));
         keyPress[2] = 0;
     }
+    if(keyPress[3]){
+        sec.push_back(make_pair((GLfloat)pos, -2.4));
+        keyPress[3] = 0;
+    }
     //Moving the bullets every frame
     for(int i=0;i<bullets.size();++i){
         glBegin(GL_TRIANGLES);
             glVertex3f(bullets[i].first-r, bullets[i].second-r, -10.0);
             glVertex3f(bullets[i].first, bullets[i].second, -10.0);
             glVertex3f(bullets[i].first+r, bullets[i].second-r, -10.0);
+        glEnd();
+    }
+    for(int i=0;i<sec.size();++i){
+        glBegin(GL_TRIANGLE_FAN);
+        for(int ii = 0; ii < 100; ii++){
+            float theta = 2.0f * 3.1415926f * float(ii) / float(100);//get the current angle
+
+            float x = r/2 * cosf(theta);//calculate the x component
+            float y = r/2 * sinf(theta);//calculate the y component
+
+            glVertex3f(x + sec[i].first, y + sec[i].second, -10.0);//output vertex
+
+        }
         glEnd();
     }
     outputText(1.2, 2.5, "Score: "+to_string(score));
@@ -430,8 +486,8 @@ int main(int argc, char **argv){
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA);
     glutInitWindowSize(512, 1024);
     glutInitWindowPosition(0, 0);
-    glutCreateWindow("HyperSpace");
-
+    GID = glutCreateWindow("HyperSpace");
+    cf = rand() % 2 + 1;
     genAliens(cf);
     glutReshapeFunc(reshape);
     glutDisplayFunc(display);
@@ -441,5 +497,6 @@ int main(int argc, char **argv){
     init();
 
     glutMainLoop();
+    cout<<"Over";
     return 0;
 }
