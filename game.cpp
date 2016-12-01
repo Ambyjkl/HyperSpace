@@ -17,6 +17,8 @@
 #include <string>
 #include <fstream>
 #include <utility>
+#include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
