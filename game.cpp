@@ -14,10 +14,12 @@
 #include <math.h>
 #include <map>
 #include <vector>
+#include <string>
 #include <utility>
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
+#include <ctype.h>
 
 using namespace std;
 
@@ -27,12 +29,37 @@ vector<pair<GLfloat, GLfloat> > alienBullets, bullets, aliens1, aliens21, aliens
 map<GLfloat, pair<GLfloat, int> > m;
 GLfloat r = 0.15, pxl = -0.15, pxr = 0.15, pos = 0;
 bool play = true, firstHit = false;
-int level = 0, cf = 2, score = 0;
+float multiplier = 0.001;
+int level = 0, cf = 2, score = 0, lives = 10;
 
 void showAliens(int);
 bool aliensGone(int);
 void DrawStarFilled (float cx, float cy, float radius, int numPoints);
 void genAliens(int);
+pair<GLfloat, GLfloat> inc(pair<GLfloat, GLfloat> p);
+pair<GLfloat, GLfloat> incAlien(pair<GLfloat, GLfloat> p);
+pair<GLfloat, GLfloat> incAlien21(pair<GLfloat, GLfloat> p);
+pair<GLfloat, GLfloat> incAlien22(pair<GLfloat, GLfloat> p);
+pair<GLfloat, GLfloat> incAlienBullet(pair<GLfloat, GLfloat> p);
+GLuint LoadTextureRAW(const char * filename, bool wrap);
+void FreeTexture(GLuint texture);
+void checkRedundant(int formation);
+
+pair<GLfloat, GLfloat> inc(pair<GLfloat, GLfloat> p){
+    return make_pair(p.first, p.second+=0.1);
+}
+pair<GLfloat, GLfloat> incAlien(pair<GLfloat, GLfloat> p){
+    return make_pair(p.first, p.second-=(0.005+(level*multiplier)));
+}
+pair<GLfloat, GLfloat> incAlien21(pair<GLfloat, GLfloat> p){
+    return make_pair(p.first+=0.005+(level*multiplier), p.second-=(0.005+(level*multiplier)));
+}
+pair<GLfloat, GLfloat> incAlien22(pair<GLfloat, GLfloat> p){
+    return make_pair(p.first-=(0.005+(level*multiplier)), p.second-=(0.005+(level*multiplier)));
+}
+pair<GLfloat, GLfloat> incAlienBullet(pair<GLfloat, GLfloat> p){
+    return make_pair(p.first, p.second-=0.005);
+}
 
 GLuint LoadTextureRAW( const char * filename, bool wrap ){
     GLuint texture;
@@ -78,48 +105,45 @@ void checkRedundant(int formation){
     switch(formation){
         case 1:
             for(int i=0;i<aliens1.size();++i)
-                if(aliens1[i].second<-3)
+                if(aliens1[i].second<-3){
                     aliens1.erase(aliens1.begin()+i);
+                    if(lives>0)
+                        lives--;
+                }
             break;
         case 2:
             for(int i=0;i<aliens21.size();++i)
                 if(aliens21[i].first>2){
-                    cout<<"remove 21 "<<i<<endl;
+                    if(lives>0)
+                        lives--;
                     aliens21.erase(aliens21.begin()+i);
                 }
             for(int i=0;i<aliens22.size();++i)
                 if(aliens22[i].first<-2){
-                    cout<<"remove 22 "<<i<<endl;
+                    if(lives>0)
+                        lives--;
                     aliens22.erase(aliens22.begin()+i);
                 }
             break;
     }
 }
 
-void outputText(int x, int y, float r, float g, float b, char *string){
-    glColor3f( r, g, b );
-    glRasterPos2f(x, y);
-    int len = (int)strlen(string);
+void outputText(float x, float y, string s){
+    //glScalef(0.005,0.005,1);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glRasterPos3f(x, y, -10);
+    int len = s.length();
     for(int i = 0; i < len; i++)
-        glutBitmapCharacter(GLUT_BITMAP_8_BY_13, string[i]);
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, s[i]);
 }
 
-pair<GLfloat, GLfloat> inc(pair<GLfloat, GLfloat> p){
-    return make_pair(p.first, p.second+=0.1);
-}
-pair<GLfloat, GLfloat> incAlien(pair<GLfloat, GLfloat> p){
-    return make_pair(p.first, p.second-=(0.005+(level*0.0005)));
-}
-pair<GLfloat, GLfloat> incAlien21(pair<GLfloat, GLfloat> p){
-    return make_pair(p.first+=0.005+(level*0.0005), p.second-=(0.005+(level*0.0005)));
-}
-pair<GLfloat, GLfloat> incAlien22(pair<GLfloat, GLfloat> p){
-    return make_pair(p.first-=(0.005+(level*0.0005)), p.second-=(0.005+(level*0.0005)));
-}
-
-void displayBullets(){
-    for(int i=0;i<bullets.size();++i)
-        cout<<bullets[i].first<<", "<<bullets[i].second<<", pos = "<<pos<<endl;
+void outputTextOver(float x, float y, string s){
+    //glScalef(0.005,0.005,1);
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glRasterPos3f(x, y, -10);
+    int len = s.length();
+    for(int i = 0; i < len; i++)
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, s[i]);
 }
 
 void showAliens(int formation){
@@ -297,6 +321,7 @@ void init(){ // Called before main loop to set up the program
 }
 
 void display(){
+    //outputText(0, 0, 1, 1, 1, "Hello");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     GLuint texture = LoadTextureRAW("star.bmp", true);
@@ -331,6 +356,10 @@ void display(){
             glVertex3f(pos+r, -2.6-r, -10);//j
             glVertex3f(pos-r, -2.6-r, -10);//c
     glEnd();
+    if(!play){
+        bullets.clear();
+        outputTextOver(-0.5, 0.2, "GAME OVER!");
+    }
 
     if(play){
         if(detectCollision(cf))
@@ -339,6 +368,8 @@ void display(){
             cout<<"Game over\n";
             play=false;
         }
+        if(lives<=0)
+            play = false;
     }
     if(keyPress[0]&&pos<=1.6)
         pos += step;
@@ -356,7 +387,8 @@ void display(){
             glVertex3f(bullets[i].first+r, bullets[i].second-r, -10.0);
         glEnd();
     }
-    //outputText(0, 0, 0, 0, 0, "Hello world");
+    outputText(1.2, 2.5, "Score: "+to_string(score));
+    outputText(-1.9, 2.5, "Lives: "+to_string(lives));
     glutSwapBuffers();
 }
 
