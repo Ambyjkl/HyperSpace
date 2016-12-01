@@ -11,15 +11,6 @@ right=0
 while true
 do
     readTiva 2> /dev/null
-    if [ "$input" == "gg" ]; then
-        cat 4723849328437462746827348273468gdjashfgjashfuqw4873tduasgfsja.txt > /dev/ttyACM0
-        break
-    fi
-done
-
-while true
-do
-    readTiva 2> /dev/null
     case "${input:0:1}" in
         l)
         if (( left == 0 )); then 

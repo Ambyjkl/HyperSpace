@@ -122,6 +122,8 @@ void ControlsTick()
 
 void mainMenu()
 {
+    Serial.println("gg");
+    OrbitOledClear();
     OrbitOledMoveTo(12, 0);    //    H
     OrbitOledLineTo( 0,15);    //    H
     OrbitOledMoveTo(21, 0);    //    H
@@ -260,6 +262,14 @@ void mainMenu()
     do {
         SecondaryFireTick();
     } while (!buttons[SECONDARY].isTriggered);
+    Serial.println("start");
+}
+void checkGameOver()
+{
+    char checkForGameOver[2] = { 0 };
+    Serial.readBytesUntil('\n',checkForGameOver, 2);
+    if (checkForGameOver[0]=='w'&&checkForGameOver[1]=='p')
+        isGameOver = true;
 }
 void loadingBar()
 {
@@ -297,7 +307,6 @@ void setup()
     n = 0;
     srand(5764);
     input.previous='c';
-    Serial.println("gg");
 }
 
 void loop()
@@ -308,5 +317,8 @@ void loop()
         isGameOver=false;
     }
     ControlsTick();
+    //int badLuck = rand();
+    //if (badLuck % 1000 == 0)
+    //    checkGameOver();
     //Temp();
 }
