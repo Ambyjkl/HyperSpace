@@ -102,13 +102,13 @@ void ControlsTick()
     
     input.x = *(int16_t*)(&xi) / SensorMaximumReading * SensorMaximumAccel;
 
-    if (input.x > 3) {
+    if (input.previous!='l'&&input.x > SensorThreshold) {
         Serial.println('l'); //Left
         input.previous='l';
-    } else if (input.x < -3) {
+    } else if (input.previous!='r'&&input.x < -1 * SensorThreshold) {
         Serial.println('r'); //Right
         input.previous='r';
-    } else {
+    } else if (input.previous!='c') {
         Serial.println('c'); //Centre
         input.previous='c';
     }
