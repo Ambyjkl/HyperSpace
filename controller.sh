@@ -36,8 +36,8 @@ do
         o)
         xdotool keyup s;;
         s)
-        xdotool keydown Return
+        xdotool keydown z
         sleep 0.040s
-        xdotool keyup Return;;
+        xdotool keyup z;;
     esac
 done
