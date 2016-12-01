@@ -31,7 +31,7 @@ int keyPress[4] = {0, 0, 0, 0}; //left, right, shoot
 vector<pair<GLfloat, GLfloat> > sec, alienBullets, bullets, aliens1, aliens21, aliens22, aliens3, aliens4;
 map<GLfloat, pair<GLfloat, int> > m;
 GLfloat r = 0.15, pxl = -0.15, pxr = 0.15, pos = 0;
-bool play = true, firstHit = false;
+bool play = true, firstHit = false, exitButton = false;
 float multiplier = 0.001;
 int level = 0, cf = 2, score = 0, lives = 10, ehs, GID;
 
@@ -271,11 +271,9 @@ bool detectCollision(int formation){
     checkRedundant(cf);
     if(aliensGone(cf)){
         level++;
-        cout<<"gone\n";
         cf = rand() % 2 + 1;
         genAliens(cf);
         firstHit = false;
-        //cout<<cf<<endl;
     }
 
     showAliens(cf);
@@ -364,6 +362,10 @@ void kf(unsigned char key, int x, int y){
             keyPress[3] = 1;
         glutPostRedisplay();
     }
+    if(!play && exitButton && key == 'z'){
+        glutDestroyWindow(GID);
+        exit(0);
+    }
 }
 
 void init(){ // Called before main loop to set up the program
@@ -416,18 +418,14 @@ void display(){
             putScore(score);
             outputText(-0.45, 0, "New high score!");
         }
-        for(long long i=0;i<(long long)500000000;++i);
-        glutDestroyWindow(GID);
-        exit(0);
-        return;
+        outputText(-0.6, -0.18, "Press button 2 to exit");
+        exitButton = true;
     }
     if(play){
         if(detectCollision(cf))
             play = true;
-        if(dead()){
-            cout<<"Game over\n";
+        if(dead())
             play=false;
-        }
         if(lives<=0)
             play = false;
     }
@@ -497,6 +495,5 @@ int main(int argc, char **argv){
     init();
 
     glutMainLoop();
-    cout<<"Over";
     return 0;
 }
