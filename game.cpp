@@ -15,6 +15,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <fstream>
 #include <utility>
 #include <iostream>
 #include <stdlib.h>
@@ -30,7 +31,7 @@ map<GLfloat, pair<GLfloat, int> > m;
 GLfloat r = 0.15, pxl = -0.15, pxr = 0.15, pos = 0;
 bool play = true, firstHit = false;
 float multiplier = 0.001;
-int level = 0, cf = 2, score = 0, lives = 10;
+int level = 0, cf = 2, score = 0, lives = 10, ehs;
 
 void showAliens(int);
 bool aliensGone(int);
@@ -128,8 +129,23 @@ void checkRedundant(int formation){
     }
 }
 
+int getScore(){
+    int hs;
+    ifstream ifile;
+    ifile.open("4723849328437462746827348273468gdjashfgjashfuqw4873tduasgfsja.txt");
+    ifile>>hs;
+    ifile.close();
+    return hs;
+}
+
+void putScore(int hs){
+    ofstream ofile;
+    ofile.open("4723849328437462746827348273468gdjashfgjashfuqw4873tduasgfsja.txt");
+    ofile<<hs;
+    ofile.close();
+}
+
 void outputText(float x, float y, string s){
-    //glScalef(0.005,0.005,1);
     glColor3f(1.0f, 1.0f, 1.0f);
     glRasterPos3f(x, y, -10);
     int len = s.length();
@@ -138,7 +154,6 @@ void outputText(float x, float y, string s){
 }
 
 void outputTextOver(float x, float y, string s){
-    //glScalef(0.005,0.005,1);
     glColor3f(1.0f, 0.0f, 0.0f);
     glRasterPos3f(x, y, -10);
     int len = s.length();
@@ -359,6 +374,10 @@ void display(){
     if(!play){
         bullets.clear();
         outputTextOver(-0.5, 0.2, "GAME OVER!");
+        if(score>ehs){
+            putScore(score);
+            outputText(-0.5, -0.4, "New high score!");
+        }
     }
 
     if(play){
@@ -403,6 +422,7 @@ void reshape(int w, int h){
 
 
 int main(int argc, char **argv){
+    ehs = getScore();
     srand(time(NULL));
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA);
