@@ -1,6 +1,6 @@
 function readTiva
 {
-  read -e input < /dev/ttyACM0;
+  read -e input < /dev/cu.usbmodem0E218D21;
 }
 up=0
 down=0
