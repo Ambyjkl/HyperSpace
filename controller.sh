@@ -14,7 +14,7 @@ do
     if [ "$input" == "gg" ]; then
         cat 4723849328437462746827348273468gdjashfgjashfuqw4873tduasgfsja.txt > /dev/ttyACM0
         break
-    fi;;
+    fi
 done
 
 while true
