@@ -285,17 +285,13 @@ void setup()
         pinMode(Buttons[i], INPUT);
     }
     OrbitOledInit();
-    //OrbitOledClear();
     OrbitOledSetFillPattern(OrbitOledGetStdPattern(iptnSolid));
-    //OrbitOledMoveTo(0, 0);
-    //OrbitOledSetCursor(0, 0);
-    //OrbitOledPutString("gg");
-    //OrbitOledUpdate();
     SensorInit();
     buttons[1].isLive=false;
     n = 0;
     srand(5764);
     input.previous='c';
+    Serial.println("gg");
 }
 
 void loop()
