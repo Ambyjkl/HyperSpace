@@ -45,20 +45,6 @@ void SensorInit()
     WireWriteRegister(TempSensor, 0x3D,1 << 3);
 }
 static int n;
-void Temp()
-{
-    size_t const DataLength = 6;
-    uint32_t data[DataLength] = { 0 };
-    WireWriteByte(TempSensor, 0x32);
-    WireRequestArray(TempSensor, data, DataLength);
-    char output[100];
-    sprintf(output,"%d,%d,%d,%d,%d,%d",data[0],data[1],data[2],data[3],data[4],data[5]);
-    OrbitOledSetCursor(0,0);
-    OrbitOledPutString(output);
-    OrbitOledUpdate();
-    //Serial.println(data[0]);
-    
-}
 
 void SecondaryFireTick()
 {
@@ -124,108 +110,108 @@ void mainMenu()
 {
     Serial.println("gg");
     OrbitOledClear();
-    OrbitOledMoveTo(12, 0);    //    H
-    OrbitOledLineTo( 0,15);    //    H
-    OrbitOledMoveTo(21, 0);    //    H
-    OrbitOledLineTo( 9,15);    //    H
-    OrbitOledMoveTo( 6, 7);    //    H
-    OrbitOledLineTo(18, 7);    //    H
-    OrbitOledMoveTo(32, 0);    //    Y
-    OrbitOledLineTo(20,15);    //    Y
-    OrbitOledMoveTo(24, 0);    //    Y
-    OrbitOledLineTo(24,10);    //    Y
-    OrbitOledMoveTo(36, 0);    //    P
-    OrbitOledLineTo(24,15);    //    P
-    OrbitOledMoveTo(36, 0);    //    P
-    OrbitOledLineTo(41, 0);    //    P
-    OrbitOledMoveTo(31, 7);    //    P
-    OrbitOledLineTo(36, 7);    //    P
-    OrbitOledMoveTo(41, 0);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(42, 1);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(36, 7);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(37, 6);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(38, 6);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(39, 5);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(40, 5);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(41, 4);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(42, 3);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(42, 2);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(48, 0);    //    E
-    OrbitOledLineTo(36,15);    //    E
-    OrbitOledMoveTo(48, 0);    //    E
-    OrbitOledLineTo(57, 0);    //    E
-    OrbitOledMoveTo(42, 7);    //    E
-    OrbitOledLineTo(51, 7);    //    E
-    OrbitOledMoveTo(37,14);    //    E
-    OrbitOledLineTo(46,14);    //    E
-    OrbitOledMoveTo(60, 0);    //    R
-    OrbitOledLineTo(48,15);    //    R
-    OrbitOledMoveTo(54, 7);    //    R
-    OrbitOledLineTo(57,15);    //    R
-    OrbitOledMoveTo(60, 0);    //    R
-    OrbitOledLineTo(65, 0);    //    R
-    OrbitOledMoveTo(55, 7);    //    R
-    OrbitOledLineTo(60, 7);    //    R
-    OrbitOledMoveTo(65, 0);    //    R
-    OrbitOledDrawPixel(  );    //    R
-    OrbitOledMoveTo(66, 1);    //    R
-    OrbitOledDrawPixel(  );    //    R
-    OrbitOledMoveTo(60, 7);    //    R
-    OrbitOledDrawPixel(  );    //    R
-    OrbitOledMoveTo(61, 6);    //    R
-    OrbitOledDrawPixel(  );    //    R
-    OrbitOledMoveTo(62, 6);    //    R
-    OrbitOledDrawPixel(  );    //    R
-    OrbitOledMoveTo(63, 5);    //    R
-    OrbitOledDrawPixel(  );    //    R
-    OrbitOledMoveTo(64, 5);    //    R
-    OrbitOledDrawPixel(  );    //    R
-    OrbitOledMoveTo(65, 4);    //    R
-    OrbitOledDrawPixel(  );    //    R
-    OrbitOledMoveTo(66, 3);    //    R
-    OrbitOledDrawPixel(  );    //    R
-    OrbitOledMoveTo(66, 2);    //    R
-    OrbitOledDrawPixel(  );    //    R
-    OrbitOledMoveTo(81, 0);    //    S
-    OrbitOledLineTo(66, 7);    //    S
-    OrbitOledLineTo(75, 7);    //    S
-    OrbitOledLineTo(61,15);    //    S
-    OrbitOledMoveTo(84, 0);    //    P
-    OrbitOledLineTo(72,15);    //    P
-    OrbitOledMoveTo(84, 0);    //    P
-    OrbitOledLineTo(89, 0);    //    P
-    OrbitOledMoveTo(79, 7);    //    P
-    OrbitOledLineTo(84, 7);    //    P
-    OrbitOledMoveTo(89, 0);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(90, 1);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(84, 7);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(85, 6);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(86, 6);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(87, 5);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(88, 5);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(89, 4);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(90, 3);    //    P
-    OrbitOledDrawPixel(  );    //    P
-    OrbitOledMoveTo(90, 2);    //    P
-    OrbitOledDrawPixel(  );    //    P
+    OrbitOledMoveTo( 12, 0);    //    H
+    OrbitOledLineTo(  0,15);    //    H
+    OrbitOledMoveTo( 21, 0);    //    H
+    OrbitOledLineTo(  9,15);    //    H
+    OrbitOledMoveTo(  6, 7);    //    H
+    OrbitOledLineTo( 18, 7);    //    H
+    OrbitOledMoveTo( 32, 0);    //    Y
+    OrbitOledLineTo( 20,15);    //    Y
+    OrbitOledMoveTo( 24, 0);    //    Y
+    OrbitOledLineTo( 24,10);    //    Y
+    OrbitOledMoveTo( 36, 0);    //    P
+    OrbitOledLineTo( 24,15);    //    P
+    OrbitOledMoveTo( 36, 0);    //    P
+    OrbitOledLineTo( 41, 0);    //    P
+    OrbitOledMoveTo( 31, 7);    //    P
+    OrbitOledLineTo( 36, 7);    //    P
+    OrbitOledMoveTo( 41, 0);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 42, 1);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 36, 7);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 37, 6);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 38, 6);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 39, 5);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 40, 5);    //    P
+    OrbitOledDrawPix el(  );    //    P
+    OrbitOledMoveTo( 41, 4);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 42, 3);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 42, 2);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 48, 0);    //    E
+    OrbitOledLineTo( 36,15);    //    E
+    OrbitOledMoveTo( 48, 0);    //    E
+    OrbitOledLineTo( 57, 0);    //    E
+    OrbitOledMoveTo( 42, 7);    //    E
+    OrbitOledLineTo( 51, 7);    //    E
+    OrbitOledMoveTo( 37,14);    //    E
+    OrbitOledLineTo( 46,14);    //    E
+    OrbitOledMoveTo( 60, 0);    //    R
+    OrbitOledLineTo( 48,15);    //    R
+    OrbitOledMoveTo( 54, 7);    //    R
+    OrbitOledLineTo( 57,15);    //    R
+    OrbitOledMoveTo( 60, 0);    //    R
+    OrbitOledLineTo( 65, 0);    //    R
+    OrbitOledMoveTo( 55, 7);    //    R
+    OrbitOledLineTo( 60, 7);    //    R
+    OrbitOledMoveTo( 65, 0);    //    R
+    OrbitOledDrawPixel(   );    //    R
+    OrbitOledMoveTo( 66, 1);    //    R
+    OrbitOledDrawPixel(   );    //    R
+    OrbitOledMoveTo( 60, 7);    //    R
+    OrbitOledDrawPixel(   );    //    R
+    OrbitOledMoveTo( 61, 6);    //    R
+    OrbitOledDrawPixel(   );    //    R
+    OrbitOledMoveTo( 62, 6);    //    R
+    OrbitOledDrawPixel(   );    //    R
+    OrbitOledMoveTo( 63, 5);    //    R
+    OrbitOledDrawPixel(   );    //    R
+    OrbitOledMoveTo( 64, 5);    //    R
+    OrbitOledDrawPixel(   );    //    R
+    OrbitOledMoveTo( 65, 4);    //    R
+    OrbitOledDrawPixel(   );    //    R
+    OrbitOledMoveTo( 66, 3);    //    R
+    OrbitOledDrawPixel(   );    //    R
+    OrbitOledMoveTo( 66, 2);    //    R
+    OrbitOledDrawPixel(   );    //    R
+    OrbitOledMoveTo( 81, 0);    //    S
+    OrbitOledLineTo( 66, 7);    //    S
+    OrbitOledLineTo( 75, 7);    //    S
+    OrbitOledLineTo( 61,15);    //    S
+    OrbitOledMoveTo( 84, 0);    //    P
+    OrbitOledLineTo( 72,15);    //    P
+    OrbitOledMoveTo( 84, 0);    //    P
+    OrbitOledLineTo( 89, 0);    //    P
+    OrbitOledMoveTo( 79, 7);    //    P
+    OrbitOledLineTo( 84, 7);    //    P
+    OrbitOledMoveTo( 89, 0);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 90, 1);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 84, 7);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 85, 6);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 86, 6);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 87, 5);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 88, 5);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 89, 4);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 90, 3);    //    P
+    OrbitOledDrawPixel(   );    //    P
+    OrbitOledMoveTo( 90, 2);    //    P
+    OrbitOledDrawPixel(   );    //    P
     OrbitOledMoveTo( 84,15);    //    A
     OrbitOledLineTo( 99, 0);    //    A
     OrbitOledLineTo( 93,15);    //    A
@@ -237,9 +223,6 @@ void mainMenu()
     OrbitOledLineTo(117, 0);    //    C
     OrbitOledMoveTo( 97,14);    //    C
     OrbitOledLineTo(106,14);    //    C
-//    OrbitOledMoveTo(105,15);
-//    OrbitOledLineTo(104,8);
-//    OrbitOledLineTo(117,0);
     OrbitOledMoveTo(120, 0);    //    E
     OrbitOledLineTo(108,15);    //    E
     OrbitOledMoveTo(120, 0);    //    E
@@ -305,7 +288,7 @@ void setup()
     SensorInit();
     buttons[1].isLive=false;
     n = 0;
-    srand(5764);
+    srand((2232+analogRead(Potentiometer)) * 5764);
     input.previous='c';
 }
 
@@ -317,8 +300,4 @@ void loop()
         isGameOver=false;
     }
     ControlsTick();
-    //int badLuck = rand();
-    //if (badLuck % 1000 == 0)
-    //    checkGameOver();
-    //Temp();
 }
