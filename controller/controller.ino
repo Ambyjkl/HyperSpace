@@ -68,62 +68,20 @@ void ControlsTick()
     WireRequestArray(SensorAccelerometer, data, DataLength);
 
     uint16_t xi = (data[1] << 8) | data[0];
-    uint16_t yi = (data[3] << 8) | data[2];
-    uint16_t zi = (data[5] << 8) | data[4];
+    //uint16_t yi = (data[3] << 8) | data[2];
+    //uint16_t zi = (data[5] << 8) | data[4];
     input.x = *(int16_t*)(&xi) / SensorMaximumReading * SensorMaximumAccel;
-    input.y = *(int16_t*)(&yi) / SensorMaximumReading * SensorMaximumAccel;
+    //input.y = *(int16_t*)(&yi) / SensorMaximumReading * SensorMaximumAccel;
 
     if (input.x > 3) {
-        if (input.y > 3) {
-            if (input.previous!='z') {
-                Serial.println('z'); //Left and down
-                input.previous='z';
-            }
-        } else if (input.y < -3) {
-            if (input.previous!='q') {
-                Serial.println('q'); //Left and up
-                input.previous='q';
-            }
-        } else {
-            if (input.previous!='l'){
-                Serial.println('l'); //Left only
-                input.previous='l';
-            }
-        }
+        Serial,println('l');
+        input.previous='l';  //Left
     } else if (input.x < -3) {
-        if (input.y > 3) {
-            if (input.previous!='x') {
-                Serial.println('x'); //Right and down
-                input.previous='x';
-            }
-        } else if (input.y < -3) {
-            if (input.previous!='e') {
-                Serial.println('e'); //Right and up
-                input.previous='e';
-            }
-        } else {
-            if (input.previous!='r') {
-                Serial.println('r'); //Right only
-                input.previous='r';
-            }
-        }
+        Serial.println('r'); //Right
+        input.previous='r';       
     } else {
-        if (input.y > 3) {
-            if (input.previous!='d') {
-                Serial.println('d'); //Down only
-                input.previous='d';
-            }
-        } else if (input.y < -3) {
-            if (input.previous!='u') {
-                Serial.println('u'); //Up only
-                input.previous='u';
-            }
-        } else {
-            if (input.previous!='c') {
-                Serial.println('c'); //Centre
-                input.previous='c';
-            }
-        }
+        Serial.println('c'); //Centre
+        input.previous='c';
     } 
 }
 
